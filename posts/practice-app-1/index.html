@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>New Project: Practice App &middot; Wes Capades</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://westhewes.github.io/"><h1>Wes Capades</h1></a>
+      <p class="lead">
+       I&#39;m a product guy and you&#39;re a produce girl. Let&#39;s make products! 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://westhewes.github.io/">Home</a> </li>
+        
+      </ul>
+    </nav>
+
+    <p>&copy; 2020. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>New Project: Practice App</h1>
+  <time datetime=2020-03-06T18:00:38-0800 class="post-date">Fri, Mar 6, 2020</time>
+  <p>I&rsquo;ve been trying to think of a fun project to help me expand my programming skills. The other day I was practicing piano and I realized a large barrier I face when trying to practice is that it&rsquo;s hard for me to know exactly what I should be practicing. I don&rsquo;t have a piano teacher so I have to make up a practice regemin for myself. So of course I go online to see what I should practice and am bombarded with information. I&rsquo;m going to make a little app to help with that.</p>
+<h2 id="end-goal">End goal</h2>
+<p>My dream is for this app be something that a musician can look at every single time they sit down to practice. It will tell them exactly what to practice, for how long, what to focus on. It should be able to take input from the practicer on how well they perform at a certain speeds and use that to adjust the future practice plan. It will also act as a log of what has been practiced and for how long.</p>
+<p>Basically, I want it to create a tool to help people get the most out of their practice by trying to enforce <strong>deliberate</strong> practice and to make it fun by making sure the dificulty level allows the musician to stay in a flow state.</p>
+<h2 id="first-steps">First steps</h2>
+<p>Obviously this is a giant project so I&rsquo;m going to start by making something that does one small thing, and then expand upon that so I don&rsquo;t get frustrated (I&rsquo;ve made that mistake too many times).</p>
+<p>I haven&rsquo;t planned out a roadmap or done any product design for this things but I&rsquo;m feeling like writing some code right now so I came up with the following spec:</p>
+<p>I want a command line tool that when run, goes through a loop of the following:</p>
+<ol>
+<li>Asks what specific exercise the practicer wants to work on</li>
+<li>Asks for a starting tempo and time limit for how long they want to practice this</li>
+</ol>
+<pre><code>What would you like to work on first?
+&gt; C Major Scale hands together
+About what speed do you think you can play this at? (quarter notes)
+&gt; 110 bpm
+How long do you want to work on this (minutes)?
+&gt; 5
+</code></pre><ol start="3">
+<li>After exercise is complete, the practicer is asked how it felt and given the following options:</li>
+<li>Depending on their answer, the tempo is adjusted</li>
+</ol>
+<pre><code>How did that feel?
+1. Impossible
+2. Lots of Mistakes
+3. A few mistakes
+4. No mistakes but challenging (this is ideal)
+5. No mistakes and too easy
+&gt; 5
+Let's try it at 112 bpm
+How did that feel?
+...
+</code></pre><ol start="5">
+<li>After repeating the exercise a few times and giving <code>No mistakes but challenging</code>, increase the tempo</li>
+<li>When the time limit is over, ask if they&rsquo;d like to continue practicing, to move on to another topic or to end the practice</li>
+</ol>
+<pre><code>It's been 5 minutes, would you like to add time, move on to another exercise, or end your practice?
+</code></pre><ol start="7">
+<li>When they end the practice, show them a summary like this:</li>
+</ol>
+<pre><code>Topic                Time Practiced   Comfortable Speed
+--------------------------------------------------------
+C Major Scale
+hands together       5 minutes        120 bpm
+
+Left hand rootless
+voicings through
+12 keys              10 minutes       50 bpm
+
+3 note voicings
+measures 1-4 of
+Autumn Leaves        10 minutes       57 bpm
+</code></pre><ol start="8">
+<li>Save the summary to a csv file with the above information and a date column</li>
+</ol>
+<h2 id="next-steps">Next steps</h2>
+<p>Nice! This actually seems like a tool I would use.</p>
+<p>Unfortunately it took more time than expected to come up with this simple product design, and I don&rsquo;t have time to start coding now!</p>
+<p>But this tool seems like it will be a great first step, plus it&rsquo;s complicated enough to not be trivial. In fact I have a feeling it will be a nice little challenge!</p>
+<p>Until next time, have a beautiful day!</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Wes Capades</title>
+    <link>https://westhewes.github.io/posts/</link>
+    <description>Recent content in Posts on Wes Capades</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Fri, 06 Mar 2020 18:00:38 -0800</lastBuildDate>
+    
+	<atom:link href="https://westhewes.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>New Project: Practice App</title>
+      <link>https://westhewes.github.io/posts/practice-app-1/</link>
+      <pubDate>Fri, 06 Mar 2020 18:00:38 -0800</pubDate>
+      
+      <guid>https://westhewes.github.io/posts/practice-app-1/</guid>
+      <description>I&amp;rsquo;ve been trying to think of a fun project to help me expand my programming skills. The other day I was practicing piano and I realized a large barrier I face when trying to practice is that it&amp;rsquo;s hard for me to know exactly what I should be practicing. I don&amp;rsquo;t have a piano teacher so I have to make up a practice regemin for myself. So of course I go online to see what I should practice and am bombarded with information.</description>
+    </item>
+    
+    <item>
+      <title>Hello World!</title>
+      <link>https://westhewes.github.io/posts/my-first-post/</link>
+      <pubDate>Thu, 05 Mar 2020 15:55:08 -0800</pubDate>
+      
+      <guid>https://westhewes.github.io/posts/my-first-post/</guid>
+      <description>This is my first post. Hopefully not my last&amp;hellip;</description>
+    </item>
+    
+  </channel>
+</rss>
