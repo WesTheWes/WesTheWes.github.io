@@ -3,17 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://westhewes.github.io/posts/practice-app-1/</loc>
-    <lastmod>2020-03-06T18:00:38-08:00</lastmod>
+    <loc>https://westhewes.github.io/posts/creating-a-practice-app-in-go/</loc>
+    <lastmod>2020-03-09T12:19:55-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://westhewes.github.io/posts/</loc>
-    <lastmod>2020-03-06T18:00:38-08:00</lastmod>
+    <lastmod>2020-03-09T12:19:55-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://westhewes.github.io/</loc>
+    <lastmod>2020-03-09T12:19:55-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://westhewes.github.io/posts/new-project-practice-app/</loc>
     <lastmod>2020-03-06T18:00:38-08:00</lastmod>
   </url>
   

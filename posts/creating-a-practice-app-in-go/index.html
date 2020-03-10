@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.66.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Creating a Basic Piano Practice Command-Line App in Go &middot; Wes Capades</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="https://westhewes.github.io/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="https://westhewes.github.io/"><h1>Wes Capades</h1></a>
+      <p class="lead">
+       I&#39;m a product guy and you&#39;re a produce girl. Let&#39;s make products! 
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="https://westhewes.github.io/">Home</a> </li>
+        
+      </ul>
+    </nav>
+
+    <p>&copy; 2020. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1>Creating a Basic Piano Practice Command-Line App in Go</h1>
+  <time datetime=2020-03-09T12:19:55-0700 class="post-date">Mon, Mar 9, 2020</time>
+  <p>Based on the spec laid out in my <a href="https://westhewes.github.io/posts/new-project-practice-app/">previous post</a>, I&rsquo;m creating as simple of a golang app as possible to satisfy everything.</p>
+<p>First and foremost I am trying to make a working product, so I&rsquo;m resisting an urge to optimize and make everything DRY. Of course if I notice I&rsquo;m reusing a ton of the same code I&rsquo;ll wrap it in a function to make things readable.</p>
+<h2 id="representing-each-exercise">Representing each exercise</h2>
+<p>I&rsquo;m going to create a little struct to represent exercises. All I care about is what is being practiced, the total time practiced, and the final bpm.</p>
+<p>Thinking ahead, I also think I might need an end time to know when to move on to the next exercise, so instead of a &ldquo;time practiced&rdquo; field, I&rsquo;m creating a starting and ending time.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">exercise</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">name</span>      <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">startTime</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+	<span style="color:#a6e22e">endTime</span>   <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+	<span style="color:#a6e22e">maxBPM</span>    <span style="color:#66d9ef">int</span>
+}
+</code></pre></div><h2 id="creating-the-flow-of-the-whole-app">Creating the flow of the whole app</h2>
+<p>First I want to get an overview of what the app is doing, THEN worry about user inputs&hellip; So I created some functions to abstract getting user inputs, then worked out the main loop of my app in <code>func main()</code>.</p>
+<p>After some trial and error, this is what I came up with.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">exercises</span> []<span style="color:#a6e22e">exercise</span>
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">bpm</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getExerciseInfo</span>()
+		<span style="color:#a6e22e">startTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+		<span style="color:#a6e22e">endTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">startTime</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">minutes</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Minute</span>)
+		<span style="color:#a6e22e">maxBPM</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+		<span style="color:#66d9ef">for</span> {
+			<span style="color:#66d9ef">for</span> {
+                <span style="color:#75715e">// Practice once then rate difficulty
+</span><span style="color:#75715e"></span>                <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Repeat this exercise at %v bpm\n&#34;</span>, <span style="color:#a6e22e">bpm</span>)
+				<span style="color:#a6e22e">difficulty</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getDifficulty</span>()
+				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">difficulty</span> <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">4</span> {
+					<span style="color:#a6e22e">maxBPM</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bpm</span>
+				}
+				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">After</span>(<span style="color:#a6e22e">endTime</span>) {
+                    <span style="color:#75715e">// If practiced longer than time, then continue
+</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">break</span>
+                }
+				<span style="color:#75715e">// If still time in practice, set the new bpm and try again
+</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">bpm</span> = <span style="color:#a6e22e">getNextBPM</span>(<span style="color:#a6e22e">bpm</span>, <span style="color:#a6e22e">difficulty</span>)
+            }
+            <span style="color:#a6e22e">continueExercise</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">continueExercise</span>()
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">continueExercise</span> {
+                <span style="color:#75715e">// If continuing, get length of extension from user and add it to end time and total minutes
+</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">moreMinutes</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getMinutes</span>()
+				<span style="color:#a6e22e">minutes</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">minutes</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">moreMinutes</span>
+				<span style="color:#a6e22e">endTime</span> = <span style="color:#a6e22e">endTime</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">moreMinutes</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Minute</span>)
+			} <span style="color:#66d9ef">else</span> {
+                <span style="color:#75715e">// Done practicing this exercise!
+</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Great job practicing %v!\nYou practiced for %v minutes, and your most recent bpm was %v\n&#34;</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">bpm</span>)
+				<span style="color:#66d9ef">break</span>
+			}
+        }
+        <span style="color:#75715e">// Add exercise to slice of exercises, and ask if they&#39;d like to start a new one
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">newExercise</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exercise</span>{<span style="color:#a6e22e">name</span>: <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">startTime</span>: <span style="color:#a6e22e">startTime</span>, <span style="color:#a6e22e">endTime</span>: <span style="color:#a6e22e">endTime</span>, <span style="color:#a6e22e">maxBPM</span>: <span style="color:#a6e22e">maxBPM</span>}
+		<span style="color:#a6e22e">exercises</span> = append(<span style="color:#a6e22e">exercises</span>, <span style="color:#a6e22e">newExercise</span>)
+		<span style="color:#a6e22e">continuePractice</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">continuePractice</span>()
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">continuePractice</span> {
+			<span style="color:#66d9ef">break</span>
+		}
+	}
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">exercises</span>)
+}
+</code></pre></div><h2 id="getting-user-input">Getting user input</h2>
+<p>This works great! Okay now to figure out how to get user input. Stack Overflow provided me with this, which is basically just creating a <code>bufio.Scanner</code> using standard input and then using <code>Scan</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#a6e22e">scanner</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufio</span>.<span style="color:#a6e22e">NewScanner</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdin</span>)
+<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;What would you like to work on first?\n&gt;&#34;</span>)
+<span style="color:#66d9ef">for</span> {
+    <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Scan</span>()
+    <span style="color:#a6e22e">name</span> = <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Text</span>()
+    <span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">name</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;\nExercise name cannot be blank\n&gt;&#34;</span>)
+    } <span style="color:#66d9ef">else</span> {
+        <span style="color:#66d9ef">break</span>
+    }
+}
+</code></pre></div><p>Seems like a fine way to process inputs to me!</p>
+<p>I know I&rsquo;ll be using this over and over again to prompt the user so I made a function to abstract the above. It takes two parameters: a string to display to the user and a validator function to check that the user has valid input. If the validation function returns an error, it displays that error to the user and loops until the user provides a valid input.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#a6e22e">inputString</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">isValidInput</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>) <span style="color:#66d9ef">string</span> {
+	<span style="color:#a6e22e">scanner</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufio</span>.<span style="color:#a6e22e">NewScanner</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdin</span>)
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">inputString</span>)
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;&gt;&#34;</span>)
+		<span style="color:#a6e22e">scanner</span>.<span style="color:#a6e22e">Scan</span>()
+		<span style="color:#a6e22e">input</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">scanner</span>.<span style="color:#a6e22e">Text</span>()
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">isValidInput</span>(<span style="color:#a6e22e">input</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%v\n&#34;</span>, <span style="color:#a6e22e">err</span>)
+		} <span style="color:#66d9ef">else</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">input</span>
+		}
+	}
+}
+</code></pre></div><p>And here&rsquo;s an example of a validation function:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">testPostitveInteger</span>(<span style="color:#a6e22e">input</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">convertedInt</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">input</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">convertedInt</span> &lt; <span style="color:#ae81ff">1</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;Input must be a positive integer&#34;</span>)
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+</code></pre></div><p>Using that I could start filling out the function that I used in the original loop</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getExerciseInfo</span>() (<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">minutes</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">bpm</span> <span style="color:#66d9ef">int</span>) {
+	<span style="color:#a6e22e">name</span> = <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;What would you like to work on?&#34;</span>, <span style="color:#a6e22e">testStringLength</span>)
+	<span style="color:#a6e22e">bpmInput</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;About what speed do you think you can play this at? (quarter notes)?&#34;</span>, <span style="color:#a6e22e">testPostitveInteger</span>)
+	<span style="color:#a6e22e">bpm</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">bpmInput</span>)
+	<span style="color:#a6e22e">minutesInput</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;How long do you want to work on this (minutes)?&#34;</span>, <span style="color:#a6e22e">testPostitveInteger</span>)
+	<span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">minutesInput</span>)
+	<span style="color:#66d9ef">return</span>
+}
+</code></pre></div><p>I&rsquo;m not checking for an error when converting to an int because that&rsquo;s already being tested in <code>testPositiveInteger</code> (there is probably a nicer way to handle this but I&rsquo;m not going to worry about that now).</p>
+<h2 id="putting-it-all-together">Putting it all together</h2>
+<p>Okay I finished! Here&rsquo;s what the entire file looks like (I wrote everything in <code>main.go</code>, don&rsquo;t judge me I have no idea what I&rsquo;m doing!)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-golang" data-lang="golang"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">&#34;bufio&#34;</span>
+	<span style="color:#e6db74">&#34;errors&#34;</span>
+	<span style="color:#e6db74">&#34;fmt&#34;</span>
+	<span style="color:#e6db74">&#34;math&#34;</span>
+	<span style="color:#e6db74">&#34;os&#34;</span>
+	<span style="color:#e6db74">&#34;strconv&#34;</span>
+	<span style="color:#e6db74">&#34;strings&#34;</span>
+	<span style="color:#e6db74">&#34;time&#34;</span>
+)
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">exercise</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">name</span>      <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">startTime</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+	<span style="color:#a6e22e">endTime</span>   <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>
+	<span style="color:#a6e22e">maxBPM</span>    <span style="color:#66d9ef">int</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">exercises</span> []<span style="color:#a6e22e">exercise</span>
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">bpm</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getExerciseInfo</span>()
+		<span style="color:#a6e22e">startTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+		<span style="color:#a6e22e">endTime</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">startTime</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">minutes</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Minute</span>)
+		<span style="color:#66d9ef">for</span> {
+			<span style="color:#66d9ef">for</span> {
+				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Repeat this exercise at %v bpm\n&#34;</span>, <span style="color:#a6e22e">bpm</span>)
+				<span style="color:#a6e22e">difficulty</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getDifficulty</span>()
+				<span style="color:#a6e22e">newBPM</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getNextBPM</span>(<span style="color:#a6e22e">bpm</span>, <span style="color:#a6e22e">difficulty</span>)
+				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">endTime</span>.<span style="color:#a6e22e">Before</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()) {
+					<span style="color:#66d9ef">break</span>
+				}
+				<span style="color:#a6e22e">bpm</span> = <span style="color:#a6e22e">newBPM</span>
+			}
+			<span style="color:#a6e22e">continueExercise</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">continueExercise</span>(<span style="color:#a6e22e">minutes</span>)
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">continueExercise</span> {
+				<span style="color:#a6e22e">minutesInput</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;How long do you want to work on this (minutes)?&#34;</span>, <span style="color:#a6e22e">testPostitveInteger</span>)
+				<span style="color:#a6e22e">moreMinutes</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">minutesInput</span>)
+				<span style="color:#a6e22e">minutes</span> <span style="color:#f92672">+=</span> <span style="color:#a6e22e">minutes</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">moreMinutes</span>
+				<span style="color:#a6e22e">endTime</span> = <span style="color:#a6e22e">endTime</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">moreMinutes</span>) <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Minute</span>)
+			} <span style="color:#66d9ef">else</span> {
+				<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;Great job practicing %v!\nYou practiced for %v minutes, and your most recent bpm was %v\n&#34;</span>, <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">bpm</span>)
+				<span style="color:#66d9ef">break</span>
+			}
+		}
+		<span style="color:#a6e22e">newExercise</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exercise</span>{<span style="color:#a6e22e">name</span>: <span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">startTime</span>: <span style="color:#a6e22e">startTime</span>, <span style="color:#a6e22e">endTime</span>: <span style="color:#a6e22e">endTime</span>}
+		<span style="color:#a6e22e">exercises</span> = append(<span style="color:#a6e22e">exercises</span>, <span style="color:#a6e22e">newExercise</span>)
+		<span style="color:#a6e22e">continuePractice</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">continuePractice</span>()
+		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">continuePractice</span> {
+			<span style="color:#66d9ef">break</span>
+		}
+	}
+	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">exercises</span>)
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#a6e22e">inputString</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">isValidInput</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span>) <span style="color:#66d9ef">string</span> {
+	<span style="color:#a6e22e">scanner</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufio</span>.<span style="color:#a6e22e">NewScanner</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stdin</span>)
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">inputString</span>)
+		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;&gt;&#34;</span>)
+		<span style="color:#a6e22e">scanner</span>.<span style="color:#a6e22e">Scan</span>()
+		<span style="color:#a6e22e">input</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">scanner</span>.<span style="color:#a6e22e">Text</span>()
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">isValidInput</span>(<span style="color:#a6e22e">input</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%v\n&#34;</span>, <span style="color:#a6e22e">err</span>)
+		} <span style="color:#66d9ef">else</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">input</span>
+		}
+	}
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">testStringLength</span>(<span style="color:#a6e22e">input</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">input</span>) &lt; <span style="color:#ae81ff">1</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;Input cannot be blank&#34;</span>)
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">testPostitveInteger</span>(<span style="color:#a6e22e">input</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">convertedInt</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">input</span>); <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">convertedInt</span> &lt; <span style="color:#ae81ff">1</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;Input must be a positive integer&#34;</span>)
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">testYesOrNo</span>(<span style="color:#a6e22e">input</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">EqualFold</span>(<span style="color:#a6e22e">input</span>, <span style="color:#e6db74">&#34;n&#34;</span>) <span style="color:#f92672">&amp;&amp;</span> !<span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">EqualFold</span>(<span style="color:#a6e22e">input</span>, <span style="color:#e6db74">&#34;y&#34;</span>) {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">New</span>(<span style="color:#e6db74">&#34;Please enter y or n&#34;</span>)
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">testInArray</span>(<span style="color:#a6e22e">inputArray</span> []<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">input</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">error</span> {
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">inputArray</span> {
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">input</span> {
+				<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+			}
+		}
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;Input needs to be one of the following: %v&#34;</span>, <span style="color:#a6e22e">inputArray</span>)
+	}
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getExerciseInfo</span>() (<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">minutes</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">bpm</span> <span style="color:#66d9ef">int</span>) {
+	<span style="color:#a6e22e">name</span> = <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;What would you like to work on?&#34;</span>, <span style="color:#a6e22e">testStringLength</span>)
+	<span style="color:#a6e22e">bpmInput</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;About what speed do you think you can play this at? (quarter notes)?&#34;</span>, <span style="color:#a6e22e">testPostitveInteger</span>)
+	<span style="color:#a6e22e">bpm</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">bpmInput</span>)
+	<span style="color:#a6e22e">minutesInput</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;How long do you want to work on this (minutes)?&#34;</span>, <span style="color:#a6e22e">testPostitveInteger</span>)
+	<span style="color:#a6e22e">minutes</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">minutesInput</span>)
+	<span style="color:#66d9ef">return</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getDifficulty</span>() <span style="color:#66d9ef">int</span> {
+	<span style="color:#a6e22e">testFunction</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">testInArray</span>([]<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;1&#34;</span>, <span style="color:#e6db74">&#34;2&#34;</span>, <span style="color:#e6db74">&#34;3&#34;</span>, <span style="color:#e6db74">&#34;4&#34;</span>, <span style="color:#e6db74">&#34;5&#34;</span>})
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;On a scale of 1 to 5, how difficult was that?\n&#34;</span>
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;1 - No mistakes and too easy\n&#34;</span>
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;2 - No mistakes but challenging\n&#34;</span>
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;3 - A few mistakes\n&#34;</span>
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;4 - Lots of Mistakes\n&#34;</span>
+	<span style="color:#a6e22e">question</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;5 - Impossible&#34;</span>
+	<span style="color:#a6e22e">difficultyString</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#a6e22e">question</span>, <span style="color:#a6e22e">testFunction</span>)
+	<span style="color:#a6e22e">difficulty</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strconv</span>.<span style="color:#a6e22e">Atoi</span>(<span style="color:#a6e22e">difficultyString</span>)
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">difficulty</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">continueExercise</span>(<span style="color:#a6e22e">minutesElapsed</span> <span style="color:#66d9ef">int</span>) <span style="color:#66d9ef">bool</span> {
+	<span style="color:#a6e22e">continueQuestion</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%v minutes have passed. Would you like to continue? [y,n]&#34;</span>, <span style="color:#a6e22e">minutesElapsed</span>)
+	<span style="color:#a6e22e">yesOrNo</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#a6e22e">continueQuestion</span>, <span style="color:#a6e22e">testYesOrNo</span>)
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">yesOrNo</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">continuePractice</span>() <span style="color:#66d9ef">bool</span> {
+	<span style="color:#a6e22e">continuePractice</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getUserInput</span>(<span style="color:#e6db74">&#34;Would you like to continue practice with another exercise? [y,n]&#34;</span>, <span style="color:#a6e22e">testYesOrNo</span>)
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">continuePractice</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;y&#34;</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getNextBPM</span>(<span style="color:#a6e22e">bpm</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">difficulty</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">newBPM</span> <span style="color:#66d9ef">int</span>) {
+	<span style="color:#66d9ef">switch</span> <span style="color:#a6e22e">difficulty</span> {
+	<span style="color:#66d9ef">case</span> <span style="color:#ae81ff">5</span>:
+		<span style="color:#a6e22e">newBPM</span> = int(<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Round</span>(float64(<span style="color:#a6e22e">bpm</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">3</span>))
+	<span style="color:#66d9ef">case</span> <span style="color:#ae81ff">4</span>:
+		<span style="color:#a6e22e">newBPM</span> = int(<span style="color:#a6e22e">math</span>.<span style="color:#a6e22e">Round</span>(float64(<span style="color:#a6e22e">bpm</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>))
+	<span style="color:#66d9ef">case</span> <span style="color:#ae81ff">3</span>:
+		<span style="color:#a6e22e">newBPM</span> = <span style="color:#a6e22e">bpm</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">5</span>
+	<span style="color:#66d9ef">case</span> <span style="color:#ae81ff">2</span>:
+		<span style="color:#a6e22e">newBPM</span> = <span style="color:#a6e22e">bpm</span>
+	<span style="color:#66d9ef">case</span> <span style="color:#ae81ff">1</span>:
+		<span style="color:#a6e22e">newBPM</span> = <span style="color:#a6e22e">bpm</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>
+	}
+	<span style="color:#66d9ef">return</span>
+}
+</code></pre></div><h2 id="actual-output">Actual output</h2>
+<p>And it works! Here&rsquo;s a me actually using it to practice: (well I only practiced for 1 minute but I&rsquo;m counting it)</p>
+<pre><code>$ go run ./
+What would you like to work on?
+&gt;C major scales, 2 octaves, hands together            
+About what speed do you think you can play this at? (quarter notes)?
+&gt;120
+How long do you want to work on this (minutes)?
+&gt;1
+Repeat this exercise at 120 bpm
+On a scale of 1 to 5, how difficult was that?
+1 - No mistakes and too easy
+2 - No mistakes but challenging
+3 - A few mistakes
+4 - Lots of Mistakes
+5 - Impossible
+&gt;3
+Repeat this exercise at 115 bpm
+On a scale of 1 to 5, how difficult was that?
+1 - No mistakes and too easy
+2 - No mistakes but challenging
+3 - A few mistakes
+4 - Lots of Mistakes
+5 - Impossible
+&gt;3
+Repeat this exercise at 110 bpm
+On a scale of 1 to 5, how difficult was that?
+1 - No mistakes and too easy
+2 - No mistakes but challenging
+3 - A few mistakes
+4 - Lots of Mistakes
+5 - Impossible
+&gt;2
+Repeat this exercise at 110 bpm
+On a scale of 1 to 5, how difficult was that?
+1 - No mistakes and too easy
+2 - No mistakes but challenging
+3 - A few mistakes
+4 - Lots of Mistakes
+5 - Impossible
+&gt;2
+1 minutes have passed. Would you like to continue? [y,n]
+&gt;n
+Great job practicing C major scales, 2 octaves, hands together!
+You practiced for 1 minutes, and your most recent bpm was 110
+Would you like to continue practice with another exercise? [y,n]
+&gt;n
+[{C major scales, 2 octaves, hands together {13804052221729533920 82969520521 0x1187420} {13804052286154043360 142969520521 0x1187420} 0}]
+</code></pre><p>Okay the summary is not up to spec&hellip;definitely can&rsquo;t tell my bpm or time practiced using that. But I&rsquo;ll fix that next time!</p>
+<p>Using this was actually kind of nice! I like the simplicity of having a machine tell me exactly what to practice and to know there is a time limit set. Feels like playing a video game!</p>
+<h2 id="ideas-for-next-time">Ideas for next time</h2>
+<p>Obviously I&rsquo;d like to clean up the summary, but as I was writing this I had a ton of more ideas of what to do with this app. Here&rsquo;s a few:</p>
+<ul>
+<li>Making the <code>getNextBPM</code> function a little bit more complex, maybe it can use more than just the very last difficulty rating and bpm to calculate the next speed to practice at</li>
+<li>Creating a list of exercises before the practice starts</li>
+<li>Allowing user to create a list of predetermined exercises to pick from</li>
+<li>Remembering the previous BPMs of exercises</li>
+<li>Displaying a graph of the practicer&rsquo;s progress over time.</li>
+<li>Organizing exercise by type (warmup/technique, repitoire, language)</li>
+<li>Randomizing exercises to keep things fresh and unexpected</li>
+<li>Optimizing to focus on weak areas (like having a higher percentage chance of picking a scale that you aren&rsquo;t as good at)</li>
+</ul>
+<p>Eventually I would also like to allow users to interact with an API which would obviously involve making all the input a lot more independent of stdin. Maybe I could give the exercise <code>struct</code> some methods, and maybe a more abstract interface.</p>
+<p>The end goal is to have the input come through an API, but I&rsquo;d like to keep the command line too available too, so I&rsquo;ll need to separate the behavior of the practice session from the command line. I can create a slick frontend and life will be beautiful!</p>
+<p>But I&rsquo;m getting waaaaay ahead of myself. There are so many things to do, but if I start looking too big picture I tend to get get frustrated with all the small things. So I&rsquo;m going to continue expanding this project in the smallest possible ways I can think of, and I can&rsquo;t wait! Until next time!</p>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>
